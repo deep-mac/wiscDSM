@@ -5,12 +5,12 @@ option java_package = "io.grpc.examples.directory";
 option java_outer_classname = "DirectoryProto";
 option objc_class_prefix = "DIR";
 
-package helloworld;
+package directory;
 
 service Client {
-    rpc getPageRead (PageRequest) returns (PageReply) {}
+    rpc pageWrite (PageRequest) returns (PageReply) {}
 
-    rpc getPageWrite (PageRequest) returns (PageReply) {}
+    rpc pageRead (PageRequest) returns (PageReply) {}
 }
 
 service Master {
@@ -20,12 +20,12 @@ service Master {
 }
 
 message PageRequest {
-    uint32 pageAddr= 1;
+    uint64 pageAddr= 1;
     uint32 pageSize = 2;
     uint32 pageOperation = 3; // 0 for Read, 1 for Write, 2 for Invalidate
 }
 
-message PageResponse {
+message PageReply {
     bool ack = 1; // True for ack, False for nack
     bytes pageData = 2;
 }
