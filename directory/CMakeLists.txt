@@ -34,10 +34,14 @@ set(dir_grpc_hdrs "${CMAKE_CURRENT_BINARY_DIR}/directory.grpc.pb.h")
 
 # Custom sources
 set(client_hdrs "${CMAKE_CURRENT_BINARY_DIR}/../../client.hh")
+set(client_srcs "${CMAKE_CURRENT_BINARY_DIR}/../../client.cc")
 set(master_hdrs "${CMAKE_CURRENT_BINARY_DIR}/../../master.hh")
+set(master_srcs "${CMAKE_CURRENT_BINARY_DIR}/../../master.cc")
+set(pagetable_hdrs "${CMAKE_CURRENT_BINARY_DIR}/../../../pageTable/table.h")
+set(pagetable_srcs "${CMAKE_CURRENT_BINARY_DIR}/../../../pageTable/table.cc")
 
 add_custom_command(
-      OUTPUT "${dir_proto_srcs}" "${dir_proto_hdrs}" "${dir_grpc_srcs}" "${dir_grpc_hdrs}" "${client_hdrs}" "${master_hdrs}"
+      OUTPUT "${dir_proto_srcs}" "${dir_proto_hdrs}" "${dir_grpc_srcs}" "${dir_grpc_hdrs}" "${client_hdrs}" "${client_srcs}" "${master_hdrs}" "${master_srcs}" "${pagetable_hdrs}" "${pagetabel_srcs}"
       COMMAND ${_PROTOBUF_PROTOC}
       ARGS --grpc_out "${CMAKE_CURRENT_BINARY_DIR}"
         --cpp_out "${CMAKE_CURRENT_BINARY_DIR}"
@@ -49,6 +53,7 @@ add_custom_command(
 # Include generated *.pb.h files
 include_directories("${CMAKE_CURRENT_BINARY_DIR}")
 include_directories("${CMAKE_CURRENT_BINARY_DIR}/../..")
+include_directories("${CMAKE_CURRENT_BINARY_DIR}/../../../pageTable")
 
 # dir_grpc_proto
 add_library(dir_grpc_proto
@@ -57,7 +62,11 @@ add_library(dir_grpc_proto
   ${dir_proto_srcs}
   ${dir_proto_hdrs}
   ${client_hdrs}
-  ${master_hdrs})
+  ${client_srcs}
+  ${master_hdrs}
+  ${master_srcs}
+  ${pagetable_hdrs}
+  ${pagetable_srcs})
 target_link_libraries(dir_grpc_proto
   ${_REFLECTION}
   ${_GRPC_GRPCPP}

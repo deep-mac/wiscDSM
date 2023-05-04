@@ -3,68 +3,48 @@
 #include <iostream>
 #include <memory>
 #include <string>
+#include<signal.h>
+#include<sys/mman.h>
+#include<thread>
 
 #include <grpcpp/grpcpp.h>
 
 #include "directory.grpc.pb.h"
 
+#include <grpcpp/ext/proto_server_reflection_plugin.h>
+#include <grpcpp/grpcpp.h>
+#include <grpcpp/health_check_service_interface.h>
+
+using grpc::Server;
 using grpc::Channel;
 using grpc::ClientContext;
+using grpc::ClientReader;
 using grpc::ServerContext;
 using grpc::Status;
+using grpc::ServerWriter;
+using grpc::ServerBuilder;
 using directory::Client;
 using directory::Master;
 using directory::PageRequest;
 using directory::PageReply;
+
+struct sigaction sa;
+int pageSize = 4096;
+struct sigaction *sa_default;
+enum OP {OP_READ, OP_WRITE};
+int totalPages = 9;
+uint64_t sharedAddrStart = (1 << 30);
+
+void faultHandler(int sig, siginfo_t *info, void *ucontext);
+int initShmem(uint64_t startAddress, int numPages);
+void RunClient(std::string port);
 
 class DSMClient {
     public:
         DSMClient(std::shared_ptr<Channel> channel)
 	    : stub_(Client::NewStub(channel)) {}
 
-	int pageRead(const uint64_t addr, const uint64_t pageSize = 4096) {
-		PageRequest request;
-		request.set_pageaddr(addr);
-		request.set_pagesize(pageSize);
-		request.set_pageoperation(0);
-
-		PageReply reply;
-
-		ClientContext context;
-
-		Status status = stub_->pageRead(&context, request, &reply);
-
-                // Act upon its status.
-                if (status.ok()) {
-                  return 0;
-                } else {
-                  std::cout << status.error_code() << ": " << status.error_message()
-                            << std::endl;
-                  return -1;
-                }
-	}
-
-	int pageWrite(const uint64_t addr, const uint64_t pageSize = 4096) {
-		PageRequest request;
-		request.set_pageaddr(addr);
-		request.set_pagesize(pageSize);
-		request.set_pageoperation(1);
-
-		PageReply reply;
-
-		ClientContext context;
-
-		Status status = stub_->pageWrite(&context, request, &reply);
-
-                // Act upon its status.
-                if (status.ok()) {
-                  return 0;
-                } else {
-                  std::cout << status.error_code() << ": " << status.error_message()
-                            << std::endl;
-                  return -1;
-                }
-	}
+	PageReply getPage(const uint64_t addr, const uint32_t operation);
 
     private:
 	std::unique_ptr<Client::Stub> stub_;
@@ -73,13 +53,9 @@ class DSMClient {
 
 class MasterImpl final : public Master::Service {
 
-    Status fwdPageRequest(ServerContext* context, const PageRequest* request, PageReply *reply) override {
-        reply->set_ack(true);
-	return Status::OK;
-    }
+    Status fwdPageRequest(ServerContext* context, const PageRequest* request, ServerWriter<PageReply> *writer) override;
 
-    Status invPage(ServerContext* context, const PageRequest* request, PageReply *reply) override {
-        reply->set_ack(true);
-	return Status::OK;
-    }
+    Status invPage(ServerContext* context, const PageRequest* request, ServerWriter<PageReply> *writer) override;
 };
+
+std::vector<DSMClient> masters;

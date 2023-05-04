@@ -8,24 +8,23 @@ option objc_class_prefix = "DIR";
 package directory;
 
 service Client {
-    rpc pageWrite (PageRequest) returns (PageReply) {}
-
-    rpc pageRead (PageRequest) returns (PageReply) {}
+    rpc getPage (PageRequest) returns (stream PageReply) {}
 }
 
 service Master {
-    rpc fwdPageRequest (PageRequest) returns (PageReply) {}
+    rpc fwdPageRequest (PageRequest) returns (stream PageReply) {}
 
-    rpc invPage (PageRequest) returns (PageReply) {}
+    rpc invPage (PageRequest) returns (stream PageReply) {}
 }
 
 message PageRequest {
-    uint64 pageAddr= 1;
-    uint32 pageSize = 2;
+    uint32 clientID = 1;
+    uint64 pageAddr= 2;
     uint32 pageOperation = 3; // 0 for Read, 1 for Write, 2 for Invalidate
 }
 
 message PageReply {
     bool ack = 1; // True for ack, False for nack
     bytes pageData = 2;
+    uint32 size = 3;
 }
