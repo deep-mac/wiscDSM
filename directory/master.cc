@@ -8,7 +8,9 @@ uint32_t DSMMaster::getClientID(uint64_t addr) {
 char* DSMMaster::fwdPageRequest(const uint32_t clientID, const uint64_t addr, const uint32_t operation, const uint32_t pageSize) {
 	PageRequest request;
 	request.set_pageaddr(addr);
-	request.set_pageoperation(operation);
+    if (DEBUG){
+        printf("fwdPageRequest:: Sending request to client = %d, addr = %ld\n", clientID, addr);
+    }
 
 	PageReply reply;
 
@@ -37,8 +39,9 @@ char* DSMMaster::fwdPageRequest(const uint32_t clientID, const uint64_t addr, co
 char* DSMMaster::invPage(const uint32_t clientID, const uint64_t addr, const uint32_t pageSize) {
 	PageRequest request;
 	request.set_pageaddr(addr);
-	request.set_pageoperation(2);
-
+    if (DEBUG){
+        printf("invPage:: Sending request to client = %d, addr = %ld\n", clientID, addr);
+    }
 	PageReply reply;
 
 	ClientContext context;
@@ -74,6 +77,9 @@ Status ClientImpl::getPage(ServerContext* context, const PageRequest* request, S
     assert (operation != 2);
 
     //uint32_t targetClientID = master->getClientID(pageAddr);
+    if (DEBUG){
+        printf("getPage:: Received pageAddr = %ld, received operation = %d, received clientID = %d\n", pageAddr, operation, clientID);
+    }
     bool isData = true;
 
     /*if (targetClientID != clientID) {
@@ -86,6 +92,13 @@ Status ClientImpl::getPage(ServerContext* context, const PageRequest* request, S
     reply.set_ack(true);
 
     PageState *pageState = pageTable->getState(pageTable->get(request->pageaddr()));
+
+    if(DEBUG){
+        printf("---------------------------------\ngetPage:: Initial value for state\n");
+        pageState->printState();
+        pageTable->printTable();
+        printf("getPage:: formed value = %u\n-------------------------------\n", pageTable->formValue(pageState));
+    }
 
     char* page;
     if (pageState->st == INV){
@@ -134,11 +147,16 @@ Status ClientImpl::getPage(ServerContext* context, const PageRequest* request, S
             pageState->clientList.push_back(request->clientid());
         }
     }
-    if(DEBUG){
-        printf("getPage:: forming value for state\n");
-        pageState->printState();
-    }
     pageTable->put(request->pageaddr(), pageTable->formValue(pageState));
+    if(DEBUG){
+        printf("----------------------------\ngetPage:: updating value for state\n");
+        pageState->printState();
+        pageTable->printTable();
+        printf("getPage:: formed value = %u\n--------------------------------\n", pageTable->formValue(pageState));
+        if (DEBUG_DATA && isData){
+            printf("getPage:: Received page data from client = %s\n", page);
+        }
+    }
     // TODO: Send Page
     int bytesSent = 0;
     uint32_t writeSize = 2048;
@@ -149,6 +167,7 @@ Status ClientImpl::getPage(ServerContext* context, const PageRequest* request, S
             memcpy(pageChunk, page+ bytesSent, writeSize);
             reply.set_pagedata(std::string(pageChunk, writeSize));
             reply.set_ack(true);
+            reply.set_size(writeSize);
             bytesSent += writeSize;
             if (!writer->Write(reply)) {
                 printf("ERROR: Failed to send page to client\n");

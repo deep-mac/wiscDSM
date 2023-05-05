@@ -13,7 +13,7 @@ void PageState::printState(){
 void PageTable::printTable(){
     auto it = map.begin();
     while(it != map.end()){
-        printf("Key = %d, Value = %x\n", it->first, it->second);
+        printf("Key = %d, Value = 0x%x\n", it->first, it->second);
         it++;
     }
 }
@@ -41,21 +41,17 @@ uint32_t PageTable::get(int key){
     return map[key];
 }
 
-// 1 bits per client, 2 MSBs for encoding state
-// 00 means inv
-// 01 means shared
-// 11 means modified
 PageState* PageTable::getState(uint32_t value){
     PageState *state = new PageState;
     if (value == 0 || value == INT_MAX){
         state->st = INV;
         return state;
     }
-    printf("Get state value = %d\n", value);
-    if ((value >> 30)  == 1){
+    printf("pageTable:: Get state value = %u\n", value);
+    if ((value >> 30)  == 0x1){
         state->st = SHARED;
     }
-    else if ((value >> 30)  == 3){
+    else if ((value >> 30)  == 0x3){
         state->st = MODIFIED;
     }
     for (int i = 0; i < 30; i++){
@@ -76,7 +72,7 @@ uint32_t PageTable::formValue (PageState* state){
         val = (val & 0x3FFFFFFF) | 0x1 << 30;
     }
     else if (state->st == MODIFIED){
-        val = (val & 0x3FFFFFFF) | (0x3 << 15);
+        val = (val & 0x3FFFFFFF) | (0x3 << 30);
     }
     for (int i = 0; i < state->clientList.size() ; i++){
         val = val | (0x1 << state->clientList[i]);

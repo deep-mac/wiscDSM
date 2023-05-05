@@ -26,7 +26,7 @@ class PageTable {
             std::string key, value;
             getline(ss, key, '$');
             getline(ss, value, '$');
-            map[stoi(key)] = stoi(value);
+            map[stoi(key)] = stoul(value);
 	    std::cout << key << " : "<< value << "\n";
         }
         fh.close();

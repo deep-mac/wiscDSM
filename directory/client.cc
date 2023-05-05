@@ -135,6 +135,10 @@ void RunClient(std::string port) {
 
 Status MasterImpl::fwdPageRequest(ServerContext* context, const PageRequest* request, ServerWriter<PageReply> *writer) {
     PageReply reply;
+    if (DEBUG){
+        //Only address is important
+        printf("fwdPageRequest:: pageAddress = %ld\n", request->pageaddr());
+    }
     void *baseAddr = (void*)(sharedAddrStart+(request->pageaddr()*pageSize));
     char page[pageSize];
     int writeSize = 2048;
@@ -166,6 +170,10 @@ Status MasterImpl::fwdPageRequest(ServerContext* context, const PageRequest* req
 
 Status MasterImpl::invPage(ServerContext* context, const PageRequest* request, ServerWriter<PageReply> *writer) {
     PageReply reply;
+    if (DEBUG){
+        //Only address is important
+        printf("invPage:: pageAddress = %ld\n", request->pageaddr());
+    }
     void *baseAddr = (void*)(sharedAddrStart+(request->pageaddr()*pageSize));
     char page[pageSize];
     int writeSize = 2048;
