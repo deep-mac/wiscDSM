@@ -95,7 +95,12 @@ int initShmem(uint64_t startAddress, int numPages, int i_clientID){
 
     //Start the listener process
     std::string clientPort = "10.10.1.1:50051";
-    std::thread clientThread (RunClient, clientPort);
+    std::map<int, std::string> clientPorts;
+    
+    clientPorts[0] = "10.10.1.1:50051";
+    clientPorts[1] = "10.10.1.1:50052";
+    clientPorts[2] = "10.10.1.1:50053";
+    std::thread clientThread (RunClient, clientPorts[clientID]);
     clientThread.detach();
 
     //Establish connection with masters
@@ -246,16 +251,16 @@ PageReply DSMClient::getPage(const uint64_t addr, const uint32_t operation)  {
 }
 
 int main(){
-    initShmem((uint64_t)(1 << 30), 9, 0);
+    initShmem((uint64_t)(1 << 30), 9, 1);
     int *p;
     p = (int*)0x40000000 + (int)0x1020;
     printf("p pointer = %x\n", p);
     printf("Value before assignment = %d\n", *p);
     *p = 1;
     printf("Value after assignment = %d\n", *p);
-    sleep(5);
+    sleep(10);
     printf("Woke up from sleep\n");
-    *p = 2;
-    printf("Value after assignment = %d\n", *p);
+    //*p = 2;
+    //printf("Value after assignment = %d\n", *p);
     return 1;
 }
