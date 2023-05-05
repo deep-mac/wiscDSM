@@ -6,6 +6,7 @@
 #include<signal.h>
 #include<sys/mman.h>
 #include<thread>
+#include<unistd.h>
 
 #include <grpcpp/grpcpp.h>
 
@@ -14,6 +15,8 @@
 #include <grpcpp/ext/proto_server_reflection_plugin.h>
 #include <grpcpp/grpcpp.h>
 #include <grpcpp/health_check_service_interface.h>
+#define DEBUG 1
+#define DEBUG_DATA 1
 
 using grpc::Server;
 using grpc::Channel;
@@ -33,6 +36,8 @@ int pageSize = 4096;
 struct sigaction *sa_default;
 enum OP {OP_READ, OP_WRITE};
 int totalPages = 9;
+int totalMasters = 3;
+int clientID = 0;
 uint64_t sharedAddrStart = (1 << 30);
 
 void faultHandler(int sig, siginfo_t *info, void *ucontext);

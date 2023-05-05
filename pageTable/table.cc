@@ -47,7 +47,7 @@ uint32_t PageTable::get(int key){
 // 11 means modified
 PageState* PageTable::getState(uint32_t value){
     PageState *state = new PageState;
-    if (value == 0){
+    if (value == 0 || value == INT_MAX){
         state->st = INV;
         return state;
     }

@@ -10,8 +10,8 @@
 using grpc::Server;
 using grpc::ServerBuilder;
 
-void RunMaster(uint32_t clientID, uint64_t startAddress, uint64_t endAddress, uint32_t pageSize, uint32_t numClients, std::string port) {
-  ClientImpl service(clientID, startAddress, endAddress, pageSize, numClients);
+void RunMaster(uint32_t masterID, uint64_t startAddress, uint32_t numPages, uint32_t numClients, std::string port) {
+  ClientImpl service(masterID, startAddress, numPages, numClients);
 
   grpc::EnableDefaultHealthCheckService(true);
   grpc::reflection::InitProtoReflectionServerBuilderPlugin();
@@ -31,11 +31,8 @@ void RunMaster(uint32_t clientID, uint64_t startAddress, uint64_t endAddress, ui
 }
 
 int main(int argc, char** argv) {
-    std::string clientPort = "0.0.0.0:50051";
-    std::string masterPort = "0.0.0.0:50052";
-    //std::thread clientThread (RunClient, clientPort);
-    std::thread masterThread (RunMaster, 0, 0, 4096, 4096, 3, masterPort);
+    std::string masterPort = "10.10.1.1:2049";
+    std::thread masterThread (RunMaster, 1, (uint64_t)(1 << 30), 9, 3, masterPort);
     masterThread.join();
-    //clientThread.join();
     return 0;
 }
