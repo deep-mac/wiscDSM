@@ -20,6 +20,8 @@ def putVars(totalVars):
         print(str_)
         str_ = "\tvar = (int*)"+startAddr + " + (int)" + str(i) + ";"
         print(str_)
+    str_ = "\tint temp;"
+    print(str_)
 
 def putRead(varNum):
     str_ = "\ttemp = *var" + str(varNum) + ";"
@@ -33,8 +35,8 @@ totalVars = int(sys.argv[1])
 totalOps = int(sys.argv[2])
 ratio = float(sys.argv[3])
 
-putInclude("stdio")
-putInclude("stdlib")
+putInclude("stdio.h")
+putInclude("stdlib.h")
 putMain()
 putVars(totalVars)
 for i in range(totalOps):
