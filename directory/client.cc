@@ -160,8 +160,12 @@ Status MasterImpl::fwdPageRequest(ServerContext* context, const PageRequest* req
         int bytesSent = 0;
         while(bytesSent < pageSize){
             memcpy(page, (char*)baseAddr+bytesSent, writeSize);
-            reply.set_pagedata(std::string(page, pageSize));
+            reply.set_pagedata(std::string(page, writeSize));
+            if (DEBUG_DATA){
+                std::cout << "fwdPage:: sent data " << std::string(page, writeSize) << std::endl;
+            }
             reply.set_ack(true);
+            reply.set_size(writeSize);
             bytesSent += writeSize;
             if (!writer->Write(reply)){
                 printf("ERROR: fwdPageReuqest:: writer nacked!!");
@@ -195,8 +199,12 @@ Status MasterImpl::invPage(ServerContext* context, const PageRequest* request, S
         int bytesSent = 0;
         while(bytesSent < pageSize){
             memcpy(page, (char*)baseAddr+bytesSent, writeSize);
-            reply.set_pagedata(std::string(page, pageSize));
+            reply.set_pagedata(std::string(page, writeSize));
+            if (DEBUG_DATA){
+                std::cout << "invPage:: sent data " << std::string(page, writeSize) << std::endl;
+            }
             reply.set_ack(true);
+            reply.set_size(writeSize);
             bytesSent += writeSize;
             if (!writer->Write(reply)){
                 printf("ERROR: invPage:: writer nacked!!");
@@ -234,7 +242,8 @@ PageReply DSMClient::getPage(const uint64_t addr, const uint32_t operation)  {
     if (DEBUG){
         printf("DSMClient::getPage:: Received page from master\n");
         if (DEBUG_DATA){
-            printf("DSMClient::getPage:: Received data = %s\n", page);
+            //printf("DSMClient::getPage:: Received data = %s\n", page);
+            std::cout << "DSMClient::getPage :: Received data = " << std::string(page, pageSize)  << std::endl;
         }
     }
 
@@ -250,15 +259,19 @@ PageReply DSMClient::getPage(const uint64_t addr, const uint32_t operation)  {
     }
 }
 
-int main(){
-    initShmem((uint64_t)(1 << 30), 9, 1);
+int main(int argc, char *argv[]){
+    if (argc < 2){
+        printf("ERROR GIVE CLIENT ID\n");
+        exit(1);
+    }
+    initShmem((uint64_t)(1 << 30), 9, atoi(argv[1]));
     int *p;
-    p = (int*)0x40000000 + (int)0x1020;
+    p = (int*)0x40000000 + (int)0x1;
     printf("p pointer = %x\n", p);
     printf("Value before assignment = %d\n", *p);
     *p = 1;
     printf("Value after assignment = %d\n", *p);
-    sleep(10);
+    sleep(20);
     printf("Woke up from sleep\n");
     //*p = 2;
     //printf("Value after assignment = %d\n", *p);

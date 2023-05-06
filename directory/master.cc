@@ -23,7 +23,10 @@ char* DSMMaster::fwdPageRequest(const uint32_t clientID, const uint64_t addr, co
     std::unique_ptr<ClientReader<PageReply> > reader(stub_->fwdPageRequest(&context, request));
     while (reader->Read(&reply)) {
         if(reply.ack()){
-            memcpy(page+bytesReceived, reply.pagedata().c_str(), reply.size());
+            if(DEBUG_DATA){
+                std::cout << "fwdPage:: Received data = " << reply.pagedata() << std::endl;
+            }
+            memcpy(page+bytesReceived, reply.pagedata().data(), reply.size());
             bytesReceived += reply.size(); 
         }
     }
@@ -32,6 +35,9 @@ char* DSMMaster::fwdPageRequest(const uint32_t clientID, const uint64_t addr, co
     if (!status.ok()) {
       std::cout << status.error_code() << ": " << status.error_message()
                 << std::endl;
+    }
+    if(DEBUG_DATA){
+        std::cout << "fwdPage:: Final Received page = " << std::string(page, pageSize) << std::endl;
     }
     return page;
 }
@@ -53,6 +59,9 @@ char* DSMMaster::invPage(const uint32_t clientID, const uint64_t addr, const uin
     std::unique_ptr<ClientReader<PageReply> > reader(stub_->invPage(&context, request));
     while (reader->Read(&reply)) {
         if(reply.ack()){
+            if (DEBUG_DATA){
+                std::cout << "invPage:: Received data = " << reply.pagedata() << std::endl;
+            }
             memcpy(page+bytesReceived, reply.pagedata().c_str(), reply.size());
             bytesReceived += reply.size(); 
         }
@@ -154,7 +163,7 @@ Status ClientImpl::getPage(ServerContext* context, const PageRequest* request, S
         pageTable->printTable();
         printf("getPage:: formed value = %u\n--------------------------------\n", pageTable->formValue(pageState));
         if (DEBUG_DATA && isData){
-            printf("getPage:: Received page data from client = %s\n", page);
+            std::cout << "getPage:: Received page data from client = " << std::string(page, pageSize) << std::endl;
         }
     }
     // TODO: Send Page
@@ -166,6 +175,9 @@ Status ClientImpl::getPage(ServerContext* context, const PageRequest* request, S
             char pageChunk[writeSize];
             memcpy(pageChunk, page+ bytesSent, writeSize);
             reply.set_pagedata(std::string(pageChunk, writeSize));
+            if (DEBUG_DATA){
+                std::cout << "getPage:: Sending page data" << std::string(pageChunk, writeSize) << std::endl;
+            }
             reply.set_ack(true);
             reply.set_size(writeSize);
             bytesSent += writeSize;
@@ -174,6 +186,7 @@ Status ClientImpl::getPage(ServerContext* context, const PageRequest* request, S
             }
             //writer->WritesDone();
         }
+        free(page);
      }
     else{
         if (!writer->Write(reply)) {
