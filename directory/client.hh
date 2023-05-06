@@ -16,7 +16,7 @@
 #include <grpcpp/grpcpp.h>
 #include <grpcpp/health_check_service_interface.h>
 #define DEBUG 1
-#define DEBUG_DATA 1
+#define DEBUG_DATA 0
 
 using grpc::Server;
 using grpc::Channel;

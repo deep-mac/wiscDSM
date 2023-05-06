@@ -31,8 +31,11 @@ void RunMaster(uint32_t masterID, uint64_t startAddress, uint32_t numPages, uint
 }
 
 int main(int argc, char** argv) {
-    std::string masterPort = "10.10.1.1:2048";
-    std::thread masterThread (RunMaster, 1, (uint64_t)(1 << 30), 9, 3, masterPort);
+    std::map<int, std::string> masterPort;
+    masterPort[0] = "10.10.1.1:2048";
+    masterPort[1] = "10.10.1.1:2049";
+    masterPort[2] = "10.10.1.1:2050";
+    std::thread masterThread (RunMaster, 1, (uint64_t)(1 << 30), 9, 3, masterPort[atoi(argv[1])]);
     masterThread.join();
     return 0;
 }

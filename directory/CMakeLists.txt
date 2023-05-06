@@ -74,7 +74,7 @@ target_link_libraries(dir_grpc_proto
 
 # Targets greeter_[async_](client|server)
 foreach(_target
-  server)
+  server client)
   add_executable(${_target} "${_target}.cc")
   target_link_libraries(${_target}
     dir_grpc_proto

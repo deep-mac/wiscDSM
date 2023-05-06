@@ -85,17 +85,10 @@ Status ClientImpl::getPage(ServerContext* context, const PageRequest* request, S
 
     assert (operation != 2);
 
-    //uint32_t targetClientID = master->getClientID(pageAddr);
     if (DEBUG){
         printf("getPage:: Received pageAddr = %ld, received operation = %d, received clientID = %d\n", pageAddr, operation, clientID);
     }
     bool isData = true;
-
-    /*if (targetClientID != clientID) {
-        // Forward Request
-        master->fwdPageRequest(clientID, pageAddr, operation, pageSize);
-        return Status::OK;
-    }*/
 
     PageReply reply;
     reply.set_ack(true);
@@ -125,6 +118,9 @@ Status ClientImpl::getPage(ServerContext* context, const PageRequest* request, S
         // Page is shared. If read, share to new client, else invalidate and share
         if (operation == 0) {
             pageState->clientList.push_back(clientID);
+            for (int i = 0; i < pageState->clientList.size(); i++) {
+                page = clients[pageState->clientList[i]].fwdPageRequest(pageState->clientList[i], request->pageaddr(), request->pageoperation(), pageSize);
+            }
         } 
         else if (operation == 1) {
             pageState->st = MODIFIED;
@@ -144,7 +140,6 @@ Status ClientImpl::getPage(ServerContext* context, const PageRequest* request, S
                 // TODO: Make asynchronous
                 page = clients[pageState->clientList[i]].fwdPageRequest(pageState->clientList[i], request->pageaddr(), request->pageoperation(), pageSize);
             }
-            pageState->clientList.clear();
             pageState->clientList.push_back(request->clientid());
         } 
         else {

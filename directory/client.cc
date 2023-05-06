@@ -271,8 +271,9 @@ int main(int argc, char *argv[]){
     printf("Value before assignment = %d\n", *p);
     *p = 1;
     printf("Value after assignment = %d\n", *p);
-    sleep(20);
+    sleep(10);
     printf("Woke up from sleep\n");
+    printf("Value after assignment = %d\n", *p);
     //*p = 2;
     //printf("Value after assignment = %d\n", *p);
     return 1;

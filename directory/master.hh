@@ -9,7 +9,7 @@
 #include "directory.grpc.pb.h"
 #include"table.h"
 #define DEBUG 1
-#define DEBUG_DATA 1
+#define DEBUG_DATA 0
 
 using grpc::Channel;
 using grpc::ClientContext;
