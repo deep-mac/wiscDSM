@@ -18,7 +18,7 @@ def putVars(totalVars):
     for i in range (totalVars):
         str_ = "\tint *var" + str(i) + ";"
         print(str_)
-        str_ = "\tvar = (int*)"+startAddr + " + (int)" + str(i) + ";"
+        str_ = "\tvar" + str(i) + " = (int*)"+startAddr + " + (int)" + str(i) + ";"
         print(str_)
     str_ = "\tint temp;"
     print(str_)
