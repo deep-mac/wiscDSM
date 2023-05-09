@@ -3,6 +3,7 @@
 #include <iostream>
 #include <memory>
 #include <string>
+#include <mutex>
 
 #include <grpcpp/grpcpp.h>
 
@@ -39,7 +40,7 @@ class DSMMaster {
 
 	char* fwdPageRequest(const uint32_t clientID, const uint64_t addr, const uint32_t operation, const uint32_t pageSize);
 
-	char* invPage(const uint32_t clientID, const uint64_t addr, const uint32_t pageSize);
+	char* invPage(const uint32_t clientID, const uint64_t addr, const uint32_t pageSize, bool sendPage);
 
     Status sendPage(ClientContext* context, PageRequest* request, PageReply* reply, uint32_t clientNum);
 
@@ -86,5 +87,6 @@ class ClientImpl final : public Client::Service {
         ///FIXME the master to client address are not setup, not sure what is stub resizing
         std::vector<DSMMaster> clients;
         uint32_t masterID;
+        std::mutex dsmLock;
 
 };

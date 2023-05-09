@@ -34,20 +34,21 @@ void faultHandler(int sig, siginfo_t *info, void *ctx){
         PageReply reply = masters[masterNum].getPage(pageNumber,operation);
         if (reply.ack()){
             void *baseAddr = (void*)(sharedAddrStart+(pageNumber*pageSize));
-            int status = mprotect( baseAddr, pageSize, PROT_WRITE);
+            int status = mprotect( baseAddr, pageSize, (reply.sharedormodified() == false)?(PROT_WRITE | PROT_READ):PROT_READ);
             if (status != 0){
                 printf("ERROR: faultHanlder:: mprotect failed\n");
             }
-            memcpy(baseAddr, reply.pagedata().c_str(), pageSize);
-            if (operation == OP_WRITE){
-                status = mprotect( baseAddr, pageSize, PROT_WRITE);
-            }
-            else{
-                status = mprotect( baseAddr, pageSize, PROT_READ);
-            }
-            if (status != 0){
-                printf("ERROR: faultHanlder:: mprotect failed after writing new data\n");
-            }
+            if (reply.containspage()) 
+                memcpy(baseAddr, reply.pagedata().c_str(), pageSize);
+            //if (operation == OP_WRITE){
+            //    status = mprotect( baseAddr, pageSize, PROT_WRITE);
+            //}
+            //else{
+            //    status = mprotect( baseAddr, pageSize, PROT_READ);
+            //}
+            //if (status != 0){
+            //    printf("ERROR: faultHanlder:: mprotect failed after writing new data\n");
+            //}
         }
         else{
             //FIXME - ideally else call default action and just segfault
@@ -186,34 +187,46 @@ Status MasterImpl::invPage(ServerContext* context, const PageRequest* request, S
     void *baseAddr = (void*)(sharedAddrStart+(request->pageaddr()*pageSize));
     char page[pageSize];
     int writeSize = 2048;
-    int status = mprotect( baseAddr, pageSize, PROT_READ);
-    if (status != 0){
-        printf("ERROR: invPage:: mprotect failed\n");
-        reply.set_ack(false);
-        if (!writer->Write(reply)){
-            printf("ERROR: invPage:: writer nacked while sending false!!");
-        }
-        //writer->WritesDone();
-    }
-    else{
-        int bytesSent = 0;
-        while(bytesSent < pageSize){
-            memcpy(page, (char*)baseAddr+bytesSent, writeSize);
-            reply.set_pagedata(std::string(page, writeSize));
-            if (DEBUG_DATA){
-                std::cout << "invPage:: sent data " << std::string(page, writeSize) << std::endl;
-            }
-            reply.set_ack(true);
-            reply.set_size(writeSize);
-            bytesSent += writeSize;
+    bool sendPage = request->needpage();
+    if(sendPage){
+        int status = mprotect( baseAddr, pageSize, PROT_READ);
+        if (status != 0){
+            printf("ERROR: invPage:: mprotect failed\n");
+            reply.set_ack(false);
             if (!writer->Write(reply)){
-                printf("ERROR: invPage:: writer nacked!!");
+                printf("ERROR: invPage:: writer nacked while sending false!!");
             }
             //writer->WritesDone();
         }
+        else{
+            int bytesSent = 0;
+            reply.set_containspage(true);
+            while(bytesSent < pageSize){
+                memcpy(page, (char*)baseAddr+bytesSent, writeSize);
+                reply.set_pagedata(std::string(page, writeSize));
+                if (DEBUG_DATA){
+                    std::cout << "invPage:: sent data " << std::string(page, writeSize) << std::endl;
+                }
+                reply.set_ack(true);
+                reply.set_size(writeSize);
+                bytesSent += writeSize;
+                if (!writer->Write(reply)){
+                    printf("ERROR: invPage:: writer nacked!!");
+                }
+                    //writer->WritesDone();
+            }
+         }
     }
-    status = mprotect( baseAddr, pageSize, PROT_NONE);
-    //Status status = writer->Finish();
+    else{
+        reply.set_containspage(false);
+        reply.set_ack(true);
+        reply.set_size(0);
+        if (!writer->Write(reply)){
+            printf("ERROR: invPage:: writer nacked!!");
+        }
+    }
+    int status = mprotect( baseAddr, pageSize, PROT_NONE);
+    
 	return Status::OK;
 }
 
@@ -233,8 +246,10 @@ PageReply DSMClient::getPage(const uint64_t addr, const uint32_t operation)  {
     int sizeReceived = 0;
     while (reader->Read(&reply)) {
         if(reply.ack()){
-            memcpy(page+sizeReceived, reply.pagedata().c_str(), reply.size());
-            sizeReceived += reply.size(); 
+            if (reply.containspage()) {
+                memcpy(page+sizeReceived, reply.pagedata().c_str(), reply.size());
+                sizeReceived += reply.size(); 
+            }
         }
         pktNum++; 
     }
@@ -249,7 +264,9 @@ PageReply DSMClient::getPage(const uint64_t addr, const uint32_t operation)  {
 
     // Act upon its status.
     if (status.ok()) {
-        reply.set_pagedata(std::string(page, pageSize));
+        if (reply.containspage()) {
+            reply.set_pagedata(std::string(page, pageSize));
+        }
         reply.set_ack(true);
         return reply;
     } else {
@@ -273,7 +290,7 @@ int main(int argc, char *argv[]){
     printf("Value after assignment = %d\n", *p);
     sleep(10);
     printf("Woke up from sleep\n");
-    printf("Value after assignment = %d\n", *p);
+//    printf("Value after assignment = %d\n", *p);
     //*p = 2;
     //printf("Value after assignment = %d\n", *p);
     return 1;

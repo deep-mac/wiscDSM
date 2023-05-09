@@ -21,10 +21,13 @@ message PageRequest {
     uint32 clientID = 1;
     uint64 pageAddr= 2;
     uint32 pageOperation = 3; // 0 for Read, 1 for Write, 2 for Invalidate
+    bool needPage = 4;
 }
 
 message PageReply {
     bool ack = 1; // True for ack, False for nack
     bytes pageData = 2;
     uint32 size = 3;
+    bool containsPage = 4;
+    bool sharedormodified = 5;
 }

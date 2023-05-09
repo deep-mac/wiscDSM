@@ -42,9 +42,10 @@ char* DSMMaster::fwdPageRequest(const uint32_t clientID, const uint64_t addr, co
     return page;
 }
 
-char* DSMMaster::invPage(const uint32_t clientID, const uint64_t addr, const uint32_t pageSize) {
+char* DSMMaster::invPage(const uint32_t clientID, const uint64_t addr, const uint32_t pageSize, bool send_page) {
 	PageRequest request;
 	request.set_pageaddr(addr);
+    request.set_needpage(send_page);
     if (DEBUG){
         printf("invPage:: Sending request to client = %d, addr = %ld\n", clientID, addr);
     }
@@ -54,7 +55,11 @@ char* DSMMaster::invPage(const uint32_t clientID, const uint64_t addr, const uin
     
     uint32_t bytesReceived = 0;
 
-    char* page = new char[pageSize/sizeof(char)];
+    char* page;
+    if (send_page)
+       page = new char[pageSize/sizeof(char)];
+    else
+       page = NULL;
 
     std::unique_ptr<ClientReader<PageReply> > reader(stub_->invPage(&context, request));
     while (reader->Read(&reply)) {
@@ -62,8 +67,10 @@ char* DSMMaster::invPage(const uint32_t clientID, const uint64_t addr, const uin
             if (DEBUG_DATA){
                 std::cout << "invPage:: Received data = " << reply.pagedata() << std::endl;
             }
-            memcpy(page+bytesReceived, reply.pagedata().c_str(), reply.size());
-            bytesReceived += reply.size(); 
+            if (send_page) {
+                memcpy(page+bytesReceived, reply.pagedata().c_str(), reply.size());
+                bytesReceived += reply.size(); 
+            }
         }
     }
     Status status = reader->Finish();
@@ -88,10 +95,11 @@ Status ClientImpl::getPage(ServerContext* context, const PageRequest* request, S
     if (DEBUG){
         printf("getPage:: Received pageAddr = %ld, received operation = %d, received clientID = %d\n", pageAddr, operation, clientID);
     }
-    bool isData = true;
 
     PageReply reply;
     reply.set_ack(true);
+
+    dsmLock.lock();
 
     PageState *pageState = pageTable->getState(pageTable->get(request->pageaddr()));
 
@@ -103,30 +111,45 @@ Status ClientImpl::getPage(ServerContext* context, const PageRequest* request, S
     }
 
     char* page;
+
+    bool send_page = true;
+    bool page_sent = false;
     if (pageState->st == INV){
-        if (operation == 0) {
-            pageState->st = SHARED;
-        } 
-        else {
-            pageState->st = MODIFIED;
-        }
+        //if (operation == 0) {
+        //    pageState->st = SHARED;
+        //} 
+        //else {
+        //    pageState->st = MODIFIED;
+        //}
+        pageState->st = MODIFIED; //Added by Selvaraj
         pageState->clientList.push_back(clientID);
         reply.set_size(0);
-        isData = false;
+        page_sent= false;
     } 
     else if (pageState->st == SHARED) {
         // Page is shared. If read, share to new client, else invalidate and share
         if (operation == 0) {
             pageState->clientList.push_back(clientID);
-            for (int i = 0; i < pageState->clientList.size(); i++) {
-                page = clients[pageState->clientList[i]].fwdPageRequest(pageState->clientList[i], request->pageaddr(), request->pageoperation(), pageSize);
-            }
+            page = clients[pageState->clientList[0]].fwdPageRequest(pageState->clientList[0], request->pageaddr(), request->pageoperation(), pageSize);
+            page_sent = true;
         } 
         else if (operation == 1) {
             pageState->st = MODIFIED;
+
+            for(int value : pageState->clientList)
+                 if(clientID == value){
+                    send_page = false;
+                 }
+ 
             for (int i = 0; i < pageState->clientList.size(); i++) {
-                // TODO: Make asynchronous
-                page = clients[pageState->clientList[i]].invPage(pageState->clientList[i], request->pageaddr(), pageSize);
+                if(clientID != pageState->clientList[i]){
+                    if(send_page == false || page_sent == true)
+                        char* null = clients[pageState->clientList[i]].invPage(pageState->clientList[i], request->pageaddr(), pageSize, false);
+                    else{
+                        page_sent = true;
+                        page = clients[pageState->clientList[i]].invPage(pageState->clientList[i], request->pageaddr(), pageSize, true);
+                    }
+                }
             }
             pageState->clientList.clear();
             pageState->clientList.push_back(request->clientid());
@@ -136,35 +159,37 @@ Status ClientImpl::getPage(ServerContext* context, const PageRequest* request, S
         // Page is in modified. Invalidate and share
         if (operation == 0) {
             pageState->st = SHARED;
-            for (int i = 0; i < pageState->clientList.size(); i++) {
-                // TODO: Make asynchronous
-                page = clients[pageState->clientList[i]].fwdPageRequest(pageState->clientList[i], request->pageaddr(), request->pageoperation(), pageSize);
-            }
+            page = clients[pageState->clientList[0]].fwdPageRequest(pageState->clientList[0], request->pageaddr(), request->pageoperation(), pageSize);
+            page_sent = true;
             pageState->clientList.push_back(request->clientid());
         } 
         else {
-            for (int i = 0; i < pageState->clientList.size(); i++) {
-                // TODO: Make asynchronous
-                page = clients[pageState->clientList[i]].invPage(pageState->clientList[i], request->pageaddr(), pageSize);
-            }
+            page = clients[pageState->clientList[0]].invPage(pageState->clientList[0], request->pageaddr(), pageSize, true);
+            page_sent = true;
             pageState->clientList.clear();
             pageState->clientList.push_back(request->clientid());
         }
     }
     pageTable->put(request->pageaddr(), pageTable->formValue(pageState));
+
     if(DEBUG){
         printf("----------------------------\ngetPage:: updating value for state\n");
         pageState->printState();
         pageTable->printTable();
         printf("getPage:: formed value = %u\n--------------------------------\n", pageTable->formValue(pageState));
-        if (DEBUG_DATA && isData){
+        if (DEBUG_DATA && page_sent){
             std::cout << "getPage:: Received page data from client = " << std::string(page, pageSize) << std::endl;
         }
     }
+
+    reply.set_containspage(page_sent);
+    reply.set_sharedormodified((pageState->st == MODIFIED)?false:true);
+    dsmLock.unlock();
+
     // TODO: Send Page
     int bytesSent = 0;
     uint32_t writeSize = 2048;
-    if (isData){
+    if (page_sent){
         while(bytesSent < pageSize) {
             // TODO: Access 1024 Bytes of address
             char pageChunk[writeSize];
@@ -182,8 +207,7 @@ Status ClientImpl::getPage(ServerContext* context, const PageRequest* request, S
             //writer->WritesDone();
         }
         free(page);
-     }
-    else{
+     } else{
         if (!writer->Write(reply)) {
             printf("ERROR: Failed to send page to client\n");
         }
