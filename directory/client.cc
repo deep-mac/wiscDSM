@@ -4,7 +4,7 @@ void faultHandler(int sig, siginfo_t *info, void *ctx){
 
     char *inputAddr = (char*)info->si_addr;
     long int pageNumber = ((long int)((inputAddr) - sharedAddrStart))/pageSize;
-    int masterNum = pageNumber/totalMasters;
+    int masterNum = pageNumber%totalMasters;
     ucontext_t *ucontext = (ucontext_t*)ctx;
 
     if(DEBUG){
@@ -296,7 +296,7 @@ int main(int argc, char *argv[]){
     } else if (argc == 3) {
         isRemote = true;
     }
-    initShmem((uint64_t)(1 << 30), 9, atoi(argv[1]), isRemote);
+    initShmem((uint64_t)(1 << 30), 100, atoi(argv[1]), isRemote);
     int *p;
     p = (int*)0x40000000 + (int)0x1;
     printf("p pointer = %x\n", p);
