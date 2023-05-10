@@ -54,6 +54,7 @@ add_custom_command(
 include_directories("${CMAKE_CURRENT_BINARY_DIR}")
 include_directories("${CMAKE_CURRENT_BINARY_DIR}/../..")
 include_directories("${CMAKE_CURRENT_BINARY_DIR}/../../../pageTable")
+include_directories("${CMAKE_CURRENT_BINARY_DIR}/../../../")
 
 # dir_grpc_proto
 add_library(dir_grpc_proto
