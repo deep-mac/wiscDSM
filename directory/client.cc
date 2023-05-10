@@ -66,7 +66,7 @@ void faultHandler(int sig, siginfo_t *info, void *ctx){
     }
 
 }
-int initShmem(uint64_t startAddress, int numPages, int i_clientID){
+int initShmem(uint64_t startAddress, int numPages, int i_clientID, bool isRemote){
     
     //initShmem ------------
     char* sharedAddr = (char*)mmap((void *)startAddress, numPages * pageSize, PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);
@@ -98,18 +98,30 @@ int initShmem(uint64_t startAddress, int numPages, int i_clientID){
     std::string clientPort = "10.10.1.1:50051";
     std::map<int, std::string> clientPorts;
     
-    clientPorts[0] = "10.10.1.1:50051";
-    clientPorts[1] = "10.10.1.1:50052";
-    clientPorts[2] = "10.10.1.1:50053";
+    if (isRemote) {
+        clientPorts[0] = "10.10.1.1:50051";
+        clientPorts[1] = "10.10.1.2:50051";
+        clientPorts[2] = "10.10.1.3:50051";
+    } else {
+        clientPorts[0] = "10.10.1.1:50051";
+        clientPorts[1] = "10.10.1.1:50052";
+        clientPorts[2] = "10.10.1.1:50053";
+    }
     std::thread clientThread (RunClient, clientPorts[clientID]);
     clientThread.detach();
 
     //Establish connection with masters
     std::map<int, std::string> masterIPs;
     
-    masterIPs[0] = "10.10.1.1:2048";
-    masterIPs[1] = "10.10.1.1:2049";
-    masterIPs[2] = "10.10.1.1:2050";
+    if (isRemote) {
+        masterIPs[0] = "10.10.1.1:2048";
+        masterIPs[1] = "10.10.1.2:2048";
+        masterIPs[2] = "10.10.1.3:2048";
+    } else {
+        masterIPs[0] = "10.10.1.1:2048";
+        masterIPs[1] = "10.10.1.1:2049";
+        masterIPs[2] = "10.10.1.1:2050";
+    }
     for (int i = 0; i < 3; i++){
          masters.push_back(std::move(DSMClient(grpc::CreateChannel(masterIPs[i], grpc::InsecureChannelCredentials()))));
     }
@@ -277,11 +289,14 @@ PageReply DSMClient::getPage(const uint64_t addr, const uint32_t operation)  {
 }
 
 int main(int argc, char *argv[]){
+    bool isRemote = false;
     if (argc < 2){
         printf("ERROR GIVE CLIENT ID\n");
         exit(1);
+    } else if (argc == 3) {
+        isRemote = true;
     }
-    initShmem((uint64_t)(1 << 30), 9, atoi(argv[1]));
+    initShmem((uint64_t)(1 << 30), 9, atoi(argv[1]), isRemote);
     int *p;
     p = (int*)0x40000000 + (int)0x1;
     printf("p pointer = %x\n", p);
@@ -290,8 +305,5 @@ int main(int argc, char *argv[]){
     printf("Value after assignment = %d\n", *p);
     sleep(10);
     printf("Woke up from sleep\n");
-//    printf("Value after assignment = %d\n", *p);
-    //*p = 2;
-    //printf("Value after assignment = %d\n", *p);
     return 1;
 }
