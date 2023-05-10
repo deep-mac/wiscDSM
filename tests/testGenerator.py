@@ -19,7 +19,7 @@ def putInclude(lib, fp):
 
 def putFunc(totalVars, totalOps, ratio, stride, fp):
     ratio100 = int(ratio*100)
-    funcName = "func_" + str(totalVars) + "_" + str(totalOps) + "_" + str(ratio100)
+    funcName = "test_" + str(totalVars) + "_" + str(totalOps) + "_" + str(ratio100)
     if stride:
        funcName = funcName + "_stride"
     fp.write("int " + funcName + "() {\n")
@@ -34,7 +34,7 @@ def putRet(fp):
 def putVars(totalVars, stride, fp):
     global startAddr
     for i in range (totalVars):
-        str_ = "\tint *var" + str(i) + ";"
+        str_ = "\tvolatile int *var" + str(i) + ";"
         fp.write(str_)
         fp.write('\n')
         str_ = "\tvar" + str(i) + " = (int*)"+hex(startAddr) + " + (int)" + str(i) + ";"
