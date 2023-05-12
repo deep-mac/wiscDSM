@@ -58,6 +58,23 @@ def putWrite(varNum, num, fp):
     fp.write(str_)
     fp.write('\n')
 
+def putUsing(listStuff, fp):
+    for stuff in listStuff:
+        fp.write("using " + stuff + ";\n")
+
+def putTimerVars(fp):
+    fp.write('high_resolution_clock::time_point start;')
+    fp.write('high_resolution_clock::time_point end;')
+    fp.write('duration<double, std::milli> duration_sec;')
+
+def putStartTimer(fp):
+    fp.write("start = high_resolution_clock::now();\n")
+
+def putEndTimer(fp):
+    fp.write("end = high_resolution_clock::now();\n")
+    fp.write("duration_sec = std::chrono::duration_cast<duration<double, std::milli>> (end - start);\n")
+    fp.write("printf(\"Time: %lf\\n\", duration_sec.count());")
+
 
 totalVars = int(sys.argv[1])
 totalOps = int(sys.argv[2])
@@ -79,8 +96,13 @@ fp = open(fileName, "w")
 putHeaderGuard(fileName, fp, False)
 putInclude("stdio.h",fp)
 putInclude("stdlib.h", fp)
+putInclude("chrono", fp)
+
+putUsing(["std::chrono::high_resolution_clock", "std::chrono::duration"], fp)
 putFunc(totalVars, totalOps, ratio, stride, fp)
+putTimerVars(fp)
 putVars(totalVars, stride, fp)
+putStartTimer(fp)
 for i in range(totalOps):
     rand_ = np.random.uniform(0, 1)
     var = random.randint(0, totalVars-1)
@@ -89,6 +111,7 @@ for i in range(totalOps):
         putWrite(var, num, fp)
     else:
         putRead(var, fp)
+putEndTimer(fp)
 putRet(fp)
 putHeaderGuard(fileName, fp, True)
 
