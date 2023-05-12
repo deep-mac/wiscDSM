@@ -1,18 +1,41 @@
 #include<client.hh>
 
 // Test includes go here
-#include "tests/test_100_100000_0.h"
-#include "tests/test_100_100000_25.h"
-#include "tests/test_100_100000_50.h"
-#include "tests/test_100_100000_75.h"
-#include "tests/test_100_100000_100.h"
-#include "tests/test_100_100000_0_stride.h"
-#include "tests/test_100_100000_25_stride.h"
-#include "tests/test_100_100000_50_stride.h"
-#include "tests/test_100_100000_75_stride.h"
-#include "tests/test_100_100000_100_stride.h"
-#include "tests/test_10_10_100_stride.h"
-//#include "tests/test_10_100_0_stride.h"
+//#include "tests/test_100_100000_0.h"
+//#include "tests/test_100_100000_25.h"
+//#include "tests/test_100_100000_50.h"
+//#include "tests/test_100_100000_75.h"
+//#include "tests/test_100_100000_100.h"
+//#include "tests/test_100_100000_0_stride.h"
+//#include "tests/test_100_100000_25_stride.h"
+//#include "tests/test_100_100000_50_stride.h"
+//#include "tests/test_100_100000_75_stride.h"
+//#include "tests/test_100_100000_100_stride.h"
+#include "tests/test_100_20000_100_stride.h"
+#include "tests/test_50_20000_100_stride.h"
+#include "tests/test_20_20000_100_stride.h"
+#include "tests/test_10_20000_100_stride.h"
+#include "tests/test_1_20000_100_stride.h"
+#include "tests/test_100_20000_75_stride.h"
+#include "tests/test_50_20000_75_stride.h"
+#include "tests/test_20_20000_75_stride.h"
+#include "tests/test_10_20000_75_stride.h"
+#include "tests/test_1_20000_75_stride.h"
+#include "tests/test_100_20000_50_stride.h"
+#include "tests/test_50_20000_50_stride.h"
+#include "tests/test_20_20000_50_stride.h"
+#include "tests/test_10_20000_50_stride.h"
+#include "tests/test_1_20000_50_stride.h"
+#include "tests/test_100_20000_25_stride.h"
+#include "tests/test_50_20000_25_stride.h"
+#include "tests/test_20_20000_25_stride.h"
+#include "tests/test_10_20000_25_stride.h"
+#include "tests/test_1_20000_25_stride.h"
+#include "tests/test_100_20000_0_stride.h"
+#include "tests/test_50_20000_0_stride.h"
+#include "tests/test_20_20000_0_stride.h"
+#include "tests/test_10_20000_0_stride.h"
+#include "tests/test_1_20000_0_stride.h"
 //
 
 uint32_t DSMClient::numSegFaults = 0;
@@ -339,8 +362,8 @@ int main(int argc, char *argv[]){
         isRemote = true;
     }
     initShmem((uint64_t)(1 << 30), 300, atoi(argv[1]), isRemote);
-    //int *p;
-    //p = (int*)0x40000000 + (int)0x1;
+    volatile int *p;
+    p = (int*)0x40000000 + (int)0x1;
     //printf("p pointer = %x\n", p);
     //printf("Value before assignment = %d\n", *p);
     //*p = 1;
@@ -348,18 +371,40 @@ int main(int argc, char *argv[]){
     //sleep(10);
     //printf("Woke up from sleep\n");
 
+    //*p = 0;
+    //sleep(10);
+    //*p = 1;
+
     // Custom tests go here
-    //test_100_100000_0();
-    //test_100_100000_25();
-    //test_100_100000_50();
-    //test_100_100000_75();
-    //test_100_100000_100();
-    //test_100_100000_0_stride();
-    test_10_10_100_stride(3, atoi(argv[1]));
-    //test_100_100000_25_stride();
-    //test_100_100000_50_stride();
-    //test_100_100000_75_stride();
-    //test_100_100000_100_stride();
+    //test_100_20000_100_stride(3, atoi(argv[1]));
+    //test_100_20000_75_stride(3, atoi(argv[1]));
+    //test_100_20000_50_stride(3, atoi(argv[1]));
+    //test_100_20000_25_stride(3, atoi(argv[1]));
+    //test_100_20000_0_stride(3, atoi(argv[1]));
+
+    //test_50_20000_100_stride(3, atoi(argv[1]));
+    //test_50_20000_75_stride(3, atoi(argv[1]));
+    //test_50_20000_50_stride(3, atoi(argv[1]));
+    //test_50_20000_25_stride(3, atoi(argv[1]));
+    //test_50_20000_0_stride(3, atoi(argv[1]));
+
+    //test_20_20000_100_stride(3, atoi(argv[1]));
+    //test_20_20000_75_stride(3, atoi(argv[1]));
+    //test_20_20000_50_stride(3, atoi(argv[1]));
+    //test_20_20000_25_stride(3, atoi(argv[1]));
+    //test_20_20000_0_stride(3, atoi(argv[1]));
+
+    //test_10_20000_100_stride(3, atoi(argv[1]));
+    //test_10_20000_75_stride(3, atoi(argv[1]));
+    //test_10_20000_50_stride(3, atoi(argv[1]));
+    //test_10_20000_25_stride(3, atoi(argv[1]));
+    //test_10_20000_0_stride(3, atoi(argv[1]));
+
+    //test_1_20000_100_stride(3, atoi(argv[1]));
+    //test_1_20000_75_stride(3, atoi(argv[1]));
+    //test_1_20000_50_stride(3, atoi(argv[1]));
+    //test_1_20000_25_stride(3, atoi(argv[1]));
+    //test_1_20000_0_stride(3, atoi(argv[1]));
 
     //
     sleep(30);
