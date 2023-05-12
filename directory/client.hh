@@ -53,6 +53,9 @@ class DSMClient {
 
     private:
 	std::unique_ptr<Client::Stub> stub_;
+
+    public:
+    static uint32_t numSegFaults;
 };
 
 
@@ -61,6 +64,12 @@ class MasterImpl final : public Master::Service {
     Status fwdPageRequest(ServerContext* context, const PageRequest* request, ServerWriter<PageReply> *writer) override;
 
     Status invPage(ServerContext* context, const PageRequest* request, ServerWriter<PageReply> *writer) override;
+
+    public:
+    static uint32_t numPageInvalidationsAcked;
+    static uint32_t numPageInvalidationsNacked;
+    static uint32_t numFwdReqsAcked;
+    static uint32_t numFwdReqsNacked;
 };
 
 std::vector<DSMClient> masters;

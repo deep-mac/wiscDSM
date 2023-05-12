@@ -1,5 +1,16 @@
 #include<client.hh>
 
+// Test includes go here
+
+//
+
+uint32_t DSMClient::numSegFaults = 0;
+uint32_t MasterImpl::numPageInvalidationsAcked = 0;
+uint32_t MasterImpl::numPageInvalidationsNacked = 0;
+uint32_t MasterImpl::numFwdReqsAcked = 0;
+uint32_t MasterImpl::numFwdReqsNacked = 0;
+
+
 void faultHandler(int sig, siginfo_t *info, void *ctx){
 
     char *inputAddr = (char*)info->si_addr;
@@ -25,6 +36,7 @@ void faultHandler(int sig, siginfo_t *info, void *ctx){
         }
     }
     else{
+        DSMClient::numSegFaults++;
         int operation = OP_READ;
         if (ucontext->uc_mcontext.gregs[REG_ERR] & 2){
             //Write access
@@ -164,6 +176,7 @@ Status MasterImpl::fwdPageRequest(ServerContext* context, const PageRequest* req
     if (status != 0){
         printf("ERROR: fwdPageRequest:: mprotect failed\n");
         reply.set_ack(false);
+        MasterImpl::numFwdReqsNacked++;
         if (!writer->Write(reply)){
             printf("ERROR: fwdPageReuqest:: writer nacked while sending false!!");
         }
@@ -171,6 +184,7 @@ Status MasterImpl::fwdPageRequest(ServerContext* context, const PageRequest* req
     }
     else{
         int bytesSent = 0;
+        MasterImpl::numFwdReqsAcked++;
         while(bytesSent < pageSize){
             memcpy(page, (char*)baseAddr+bytesSent, writeSize);
             reply.set_pagedata(std::string(page, writeSize));
@@ -205,6 +219,7 @@ Status MasterImpl::invPage(ServerContext* context, const PageRequest* request, S
         if (status != 0){
             printf("ERROR: invPage:: mprotect failed\n");
             reply.set_ack(false);
+            MasterImpl::numPageInvalidationsNacked++;
             if (!writer->Write(reply)){
                 printf("ERROR: invPage:: writer nacked while sending false!!");
             }
@@ -213,6 +228,7 @@ Status MasterImpl::invPage(ServerContext* context, const PageRequest* request, S
         else{
             int bytesSent = 0;
             reply.set_containspage(true);
+            MasterImpl::numPageInvalidationsAcked++;
             while(bytesSent < pageSize){
                 memcpy(page, (char*)baseAddr+bytesSent, writeSize);
                 reply.set_pagedata(std::string(page, writeSize));
@@ -232,6 +248,7 @@ Status MasterImpl::invPage(ServerContext* context, const PageRequest* request, S
     else{
         reply.set_containspage(false);
         reply.set_ack(true);
+        MasterImpl::numPageInvalidationsAcked++;
         reply.set_size(0);
         if (!writer->Write(reply)){
             printf("ERROR: invPage:: writer nacked!!");
@@ -305,5 +322,22 @@ int main(int argc, char *argv[]){
     printf("Value after assignment = %d\n", *p);
     sleep(10);
     printf("Woke up from sleep\n");
+
+    // Custom tests go here
+
+    //
+
+    printf("Number of segmentation faults : %d\n", DSMClient::numSegFaults);
+    printf("Number of Page Invalidations Acked : %d\n", MasterImpl::numPageInvalidationsAcked);
+    printf("Number of Page Invalidations Nacked : %d\n", MasterImpl::numPageInvalidationsNacked);
+    printf("Number of Fwd Page Requests Acked : %d\n", MasterImpl::numFwdReqsAcked);
+    printf("Number of Fwd Page Requests Nacked : %d\n", MasterImpl::numFwdReqsNacked);
+
+    DSMClient::numSegFaults = 0;
+    MasterImpl::numPageInvalidationsAcked = 0;
+    MasterImpl::numPageInvalidationsNacked = 0;
+    MasterImpl::numFwdReqsAcked = 0;
+    MasterImpl::numFwdReqsNacked = 0;
+
     return 1;
 }
