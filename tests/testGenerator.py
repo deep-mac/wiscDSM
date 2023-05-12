@@ -25,7 +25,7 @@ def putFunc(totalVars, totalOps, ratio, stride, fp):
     fp.write("int " + funcName + "(int totalClients, int clientNum) {\n")
     fp.write("\n\tint* barrier = (int *)0x40000000;\n")
     fp.write("\tif (clientNum == 0) *barrier = 0;\n");
-    fp.write("\t*barrier++;\n");
+    fp.write("\t(*barrier)++;\n");
     fp.write("\twhile (*barrier != totalClients) {\n")
     fp.write("\t}\n")
     fp.write('\n')
