@@ -11,6 +11,7 @@
 #include"table.h"
 #define DEBUG 1
 #define DEBUG_DATA 0
+#define TOTAL_LOCKS 100
 
 using grpc::Channel;
 using grpc::ClientContext;
@@ -87,6 +88,6 @@ class ClientImpl final : public Client::Service {
         ///FIXME the master to client address are not setup, not sure what is stub resizing
         std::vector<DSMMaster> clients;
         uint32_t masterID;
-        std::mutex dsmLock;
+        std::mutex dsmLock[TOTAL_LOCKS];
 
 };

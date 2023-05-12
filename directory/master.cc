@@ -99,7 +99,7 @@ Status ClientImpl::getPage(ServerContext* context, const PageRequest* request, S
     PageReply reply;
     reply.set_ack(true);
 
-    dsmLock.lock();
+    dsmLock[pageAddr%TOTAL_LOCKS].lock();
 
     PageState *pageState = pageTable->getState(pageTable->get(request->pageaddr()));
 
@@ -212,7 +212,7 @@ Status ClientImpl::getPage(ServerContext* context, const PageRequest* request, S
         }
     }
 
-    dsmLock.unlock();
+    dsmLock[pageAddr%TOTAL_LOCKS].unlock();
     //this may need to initiate RPC calls to other client to invalidate or fetch stuff
     //Status status = returnPage(context, request, &reply, writer, page);
     return Status::OK;
