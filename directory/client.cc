@@ -1,6 +1,16 @@
 #include<client.hh>
 
 // Test includes go here
+#include "test_100_1000000_0.h"
+#include "test_100_1000000_25.h"
+#include "test_100_1000000_50.h"
+#include "test_100_1000000_75.h"
+#include "test_100_1000000_100.h"
+#include "test_100_1000000_0_stride.h"
+#include "test_100_1000000_25_stride.h"
+#include "test_100_1000000_50_stride.h"
+#include "test_100_1000000_75_stride.h"
+#include "test_100_1000000_100_stride.h"
 
 //
 
@@ -314,16 +324,26 @@ int main(int argc, char *argv[]){
         isRemote = true;
     }
     initShmem((uint64_t)(1 << 30), 100, atoi(argv[1]), isRemote);
-    int *p;
-    p = (int*)0x40000000 + (int)0x1;
-    printf("p pointer = %x\n", p);
-    printf("Value before assignment = %d\n", *p);
-    *p = 1;
-    printf("Value after assignment = %d\n", *p);
-    sleep(10);
-    printf("Woke up from sleep\n");
+    //int *p;
+    //p = (int*)0x40000000 + (int)0x1;
+    //printf("p pointer = %x\n", p);
+    //printf("Value before assignment = %d\n", *p);
+    //*p = 1;
+    //printf("Value after assignment = %d\n", *p);
+    //sleep(10);
+    //printf("Woke up from sleep\n");
 
     // Custom tests go here
+    //test_100_1000000_0()
+    //test_100_1000000_25()
+    //test_100_1000000_50()
+    //test_100_1000000_75()
+    //test_100_1000000_100()
+    //test_100_1000000_0_stride()
+    //test_100_1000000_25_stride()
+    //test_100_1000000_50_stride()
+    //test_100_1000000_75_stride()
+    //test_100_1000000_100_stride()
 
     //
 
