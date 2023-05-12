@@ -20,6 +20,7 @@ uint32_t MasterImpl::numPageInvalidationsNacked = 0;
 uint32_t MasterImpl::numFwdReqsAcked = 0;
 uint32_t MasterImpl::numFwdReqsNacked = 0;
 
+std::mutex DSMClient::dsmLock;
 
 void faultHandler(int sig, siginfo_t *info, void *ctx){
 
@@ -186,6 +187,8 @@ Status MasterImpl::fwdPageRequest(ServerContext* context, const PageRequest* req
     void *baseAddr = (void*)(sharedAddrStart+(request->pageaddr()*pageSize));
     char page[pageSize];
     int writeSize = 2048;
+
+    DSMClient::dsmLock.lock();
     int status = mprotect(baseAddr, pageSize, PROT_READ);
     if (status != 0){
         printf("ERROR: fwdPageRequest:: mprotect failed\n");
@@ -214,6 +217,7 @@ Status MasterImpl::fwdPageRequest(ServerContext* context, const PageRequest* req
             //writer->WritesDone();
         }
     }
+    DSMClient::dsmLock.unlock();
     //Status status = writer->Finish();
 	return Status::OK;
 }
@@ -228,6 +232,8 @@ Status MasterImpl::invPage(ServerContext* context, const PageRequest* request, S
     char page[pageSize];
     int writeSize = 2048;
     bool sendPage = request->needpage();
+    if (DEBUG) printf("Need page : %d\n", sendPage);
+    DSMClient::dsmLock.lock();
     if(sendPage){
         int status = mprotect( baseAddr, pageSize, PROT_READ);
         if (status != 0){
@@ -269,6 +275,7 @@ Status MasterImpl::invPage(ServerContext* context, const PageRequest* request, S
         }
     }
     int status = mprotect( baseAddr, pageSize, PROT_NONE);
+    DSMClient::dsmLock.unlock();
     
 	return Status::OK;
 }
@@ -287,6 +294,7 @@ PageReply DSMClient::getPage(const uint64_t addr, const uint32_t operation)  {
     std::unique_ptr<ClientReader<PageReply>> reader(stub_->getPage(&context, request));
     int pktNum = 0; 
     int sizeReceived = 0;
+    DSMClient::dsmLock.lock();
     while (reader->Read(&reply)) {
         if(reply.ack()){
             if (reply.containspage()) {
@@ -297,6 +305,7 @@ PageReply DSMClient::getPage(const uint64_t addr, const uint32_t operation)  {
         pktNum++; 
     }
     Status status = reader->Finish();
+    DSMClient::dsmLock.unlock();
     if (DEBUG){
         printf("DSMClient::getPage:: Received page from master\n");
         if (DEBUG_DATA){
@@ -327,7 +336,7 @@ int main(int argc, char *argv[]){
     } else if (argc == 3) {
         isRemote = true;
     }
-    initShmem((uint64_t)(1 << 30), 100, atoi(argv[1]), isRemote);
+    initShmem((uint64_t)(1 << 30), 200, atoi(argv[1]), isRemote);
     //int *p;
     //p = (int*)0x40000000 + (int)0x1;
     //printf("p pointer = %x\n", p);
@@ -343,14 +352,14 @@ int main(int argc, char *argv[]){
     //test_100_100000_50();
     //test_100_100000_75();
     //test_100_100000_100();
-    test_100_100000_0_stride();
+    //test_100_100000_0_stride();
     //test_100_100000_25_stride();
     //test_100_100000_50_stride();
     //test_100_100000_75_stride();
-    //test_100_100000_100_stride();
+    test_100_100000_100_stride();
 
     //
-    //sleep(30);
+    sleep(30);
 
     printf("Number of segmentation faults : %d\n", DSMClient::numSegFaults);
     printf("Number of Page Invalidations Acked : %d\n", MasterImpl::numPageInvalidationsAcked);

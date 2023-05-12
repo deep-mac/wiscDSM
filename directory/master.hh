@@ -62,8 +62,8 @@ class ClientImpl final : public Client::Service {
 
             std::map<int, std::string> clientIPs;
             clientIPs[0] = "10.10.1.1:50051";
-            clientIPs[1] = "10.10.1.1:50052";
-            clientIPs[2] = "10.10.1.1:50053";
+            clientIPs[1] = "10.10.1.2:50051";
+            clientIPs[2] = "10.10.1.3:50051";
             for (int i = 0; i < numClients; i++){
                  clients.push_back(std::move(DSMMaster(grpc::CreateChannel(clientIPs[i], grpc::InsecureChannelCredentials()))));
             }

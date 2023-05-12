@@ -56,6 +56,8 @@ class DSMClient {
 
     public:
     static uint32_t numSegFaults;
+
+    static std::mutex dsmLock;
 };
 
 
