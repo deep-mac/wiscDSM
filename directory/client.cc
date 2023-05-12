@@ -11,7 +11,7 @@
 #include "tests/test_100_100000_50_stride.h"
 #include "tests/test_100_100000_75_stride.h"
 #include "tests/test_100_100000_100_stride.h"
-
+//#include "tests/test_10_100_0_stride.h"
 //
 
 uint32_t DSMClient::numSegFaults = 0;
@@ -56,13 +56,17 @@ void faultHandler(int sig, siginfo_t *info, void *ctx){
         PageReply reply = masters[masterNum].getPage(pageNumber,operation);
         if (reply.ack()){
             void *baseAddr = (void*)(sharedAddrStart+(pageNumber*pageSize));
-            int status = mprotect( baseAddr, pageSize, (reply.sharedormodified() == false)?(PROT_WRITE | PROT_READ):PROT_READ);
+            int status = mprotect( baseAddr, pageSize, PROT_WRITE);
             if (status != 0){
                 printf("ERROR: faultHanlder:: mprotect failed\n");
             }
             if (reply.containspage()) 
                 memcpy(baseAddr, reply.pagedata().c_str(), pageSize);
-            //if (operation == OP_WRITE){
+            status = mprotect( baseAddr, pageSize, (reply.sharedormodified() == false)?(PROT_WRITE | PROT_READ):PROT_READ);
+            if (status != 0){
+                printf("ERROR: faultHanlder:: mprotect failed\n");
+            }
+//if (operation == OP_WRITE){
             //    status = mprotect( baseAddr, pageSize, PROT_WRITE);
             //}
             //else{
@@ -346,7 +350,7 @@ int main(int argc, char *argv[]){
     //test_100_100000_100_stride();
 
     //
-    sleep(30);
+    //sleep(30);
 
     printf("Number of segmentation faults : %d\n", DSMClient::numSegFaults);
     printf("Number of Page Invalidations Acked : %d\n", MasterImpl::numPageInvalidationsAcked);
