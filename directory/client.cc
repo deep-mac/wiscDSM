@@ -1,16 +1,16 @@
 #include<client.hh>
 
 // Test includes go here
-#include "test_100_1000000_0.h"
-#include "test_100_1000000_25.h"
-#include "test_100_1000000_50.h"
-#include "test_100_1000000_75.h"
-#include "test_100_1000000_100.h"
-#include "test_100_1000000_0_stride.h"
-#include "test_100_1000000_25_stride.h"
-#include "test_100_1000000_50_stride.h"
-#include "test_100_1000000_75_stride.h"
-#include "test_100_1000000_100_stride.h"
+#include "tests/test_100_100000_0.h"
+#include "tests/test_100_100000_25.h"
+#include "tests/test_100_100000_50.h"
+#include "tests/test_100_100000_75.h"
+#include "tests/test_100_100000_100.h"
+#include "tests/test_100_100000_0_stride.h"
+#include "tests/test_100_100000_25_stride.h"
+#include "tests/test_100_100000_50_stride.h"
+#include "tests/test_100_100000_75_stride.h"
+#include "tests/test_100_100000_100_stride.h"
 
 //
 
@@ -334,16 +334,16 @@ int main(int argc, char *argv[]){
     //printf("Woke up from sleep\n");
 
     // Custom tests go here
-    //test_100_1000000_0()
-    //test_100_1000000_25()
-    //test_100_1000000_50()
-    //test_100_1000000_75()
-    //test_100_1000000_100()
-    //test_100_1000000_0_stride()
-    //test_100_1000000_25_stride()
-    //test_100_1000000_50_stride()
-    //test_100_1000000_75_stride()
-    //test_100_1000000_100_stride()
+    test_100_100000_0();
+    //test_100_100000_25();
+    //test_100_100000_50();
+    //test_100_100000_75();
+    //test_100_100000_100();
+    //test_100_100000_0_stride();
+    //test_100_100000_25_stride();
+    //test_100_100000_50_stride();
+    //test_100_100000_75_stride();
+    //test_100_100000_100_stride();
 
     //
 

@@ -73,7 +73,7 @@ def putStartTimer(fp):
 def putEndTimer(fp):
     fp.write("end = high_resolution_clock::now();\n")
     fp.write("duration_sec = std::chrono::duration_cast<duration<double, std::milli>> (end - start);\n")
-    fp.write("printf(\"Time: %lf\\n\", duration_sec.count());")
+    fp.write("printf(\"Time: %lf\\n\", duration_sec.count());\n")
 
 
 totalVars = int(sys.argv[1])
