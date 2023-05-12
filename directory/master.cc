@@ -184,7 +184,6 @@ Status ClientImpl::getPage(ServerContext* context, const PageRequest* request, S
 
     reply.set_containspage(page_sent);
     reply.set_sharedormodified((pageState->st == MODIFIED)?false:true);
-    dsmLock.unlock();
 
     // TODO: Send Page
     int bytesSent = 0;
@@ -213,6 +212,7 @@ Status ClientImpl::getPage(ServerContext* context, const PageRequest* request, S
         }
     }
 
+    dsmLock.unlock();
     //this may need to initiate RPC calls to other client to invalidate or fetch stuff
     //Status status = returnPage(context, request, &reply, writer, page);
     return Status::OK;

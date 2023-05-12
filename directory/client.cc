@@ -188,7 +188,7 @@ Status MasterImpl::fwdPageRequest(ServerContext* context, const PageRequest* req
     char page[pageSize];
     int writeSize = 2048;
 
-    DSMClient::dsmLock.lock();
+    //DSMClient::dsmLock.lock();
     int status = mprotect(baseAddr, pageSize, PROT_READ);
     if (status != 0){
         printf("ERROR: fwdPageRequest:: mprotect failed\n");
@@ -217,7 +217,7 @@ Status MasterImpl::fwdPageRequest(ServerContext* context, const PageRequest* req
             //writer->WritesDone();
         }
     }
-    DSMClient::dsmLock.unlock();
+    //DSMClient::dsmLock.unlock();
     //Status status = writer->Finish();
 	return Status::OK;
 }
@@ -233,7 +233,7 @@ Status MasterImpl::invPage(ServerContext* context, const PageRequest* request, S
     int writeSize = 2048;
     bool sendPage = request->needpage();
     if (DEBUG) printf("Need page : %d\n", sendPage);
-    DSMClient::dsmLock.lock();
+    //DSMClient::dsmLock.lock();
     if(sendPage){
         int status = mprotect( baseAddr, pageSize, PROT_READ);
         if (status != 0){
@@ -275,7 +275,7 @@ Status MasterImpl::invPage(ServerContext* context, const PageRequest* request, S
         }
     }
     int status = mprotect( baseAddr, pageSize, PROT_NONE);
-    DSMClient::dsmLock.unlock();
+    //DSMClient::dsmLock.unlock();
     
 	return Status::OK;
 }
@@ -294,7 +294,7 @@ PageReply DSMClient::getPage(const uint64_t addr, const uint32_t operation)  {
     std::unique_ptr<ClientReader<PageReply>> reader(stub_->getPage(&context, request));
     int pktNum = 0; 
     int sizeReceived = 0;
-    DSMClient::dsmLock.lock();
+    //DSMClient::dsmLock.lock();
     while (reader->Read(&reply)) {
         if(reply.ack()){
             if (reply.containspage()) {
@@ -305,7 +305,7 @@ PageReply DSMClient::getPage(const uint64_t addr, const uint32_t operation)  {
         pktNum++; 
     }
     Status status = reader->Finish();
-    DSMClient::dsmLock.unlock();
+    //DSMClient::dsmLock.unlock();
     if (DEBUG){
         printf("DSMClient::getPage:: Received page from master\n");
         if (DEBUG_DATA){
