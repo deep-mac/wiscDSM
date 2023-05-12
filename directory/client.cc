@@ -11,6 +11,7 @@
 #include "tests/test_100_100000_50_stride.h"
 #include "tests/test_100_100000_75_stride.h"
 #include "tests/test_100_100000_100_stride.h"
+#include "tests/test_10_10_100_stride.h"
 //#include "tests/test_10_100_0_stride.h"
 //
 
@@ -26,7 +27,8 @@ void faultHandler(int sig, siginfo_t *info, void *ctx){
 
     char *inputAddr = (char*)info->si_addr;
     long int pageNumber = ((long int)((inputAddr) - sharedAddrStart))/pageSize;
-    int masterNum = pageNumber%totalMasters;
+    int pagesPerMaster = totalPages/totalMasters;
+    int masterNum = pageNumber/pagesPerMaster;
     ucontext_t *ucontext = (ucontext_t*)ctx;
 
     if(DEBUG){
@@ -336,7 +338,7 @@ int main(int argc, char *argv[]){
     } else if (argc == 3) {
         isRemote = true;
     }
-    initShmem((uint64_t)(1 << 30), 200, atoi(argv[1]), isRemote);
+    initShmem((uint64_t)(1 << 30), 300, atoi(argv[1]), isRemote);
     //int *p;
     //p = (int*)0x40000000 + (int)0x1;
     //printf("p pointer = %x\n", p);
@@ -353,10 +355,11 @@ int main(int argc, char *argv[]){
     //test_100_100000_75();
     //test_100_100000_100();
     //test_100_100000_0_stride();
+    test_10_10_100_stride(3, atoi(argv[1]));
     //test_100_100000_25_stride();
     //test_100_100000_50_stride();
     //test_100_100000_75_stride();
-    test_100_100000_100_stride();
+    //test_100_100000_100_stride();
 
     //
     sleep(30);

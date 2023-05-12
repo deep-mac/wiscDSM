@@ -22,7 +22,12 @@ def putFunc(totalVars, totalOps, ratio, stride, fp):
     funcName = "test_" + str(totalVars) + "_" + str(totalOps) + "_" + str(ratio100)
     if stride:
        funcName = funcName + "_stride"
-    fp.write("int " + funcName + "() {\n")
+    fp.write("int " + funcName + "(int totalClients, int clientNum) {\n")
+    fp.write("\n\tint* barrier = (int *)0x40000000;\n")
+    fp.write("\tif (clientNum == 0) *barrier = 0;\n");
+    fp.write("\t*barrier++;\n");
+    fp.write("\twhile (*barrier != totalClients) {\n")
+    fp.write("\t}\n")
     fp.write('\n')
 
 
@@ -63,17 +68,17 @@ def putUsing(listStuff, fp):
         fp.write("using " + stuff + ";\n")
 
 def putTimerVars(fp):
-    fp.write('high_resolution_clock::time_point start;')
-    fp.write('high_resolution_clock::time_point end;')
-    fp.write('duration<double, std::milli> duration_sec;')
+    fp.write('\thigh_resolution_clock::time_point start;\n')
+    fp.write('\thigh_resolution_clock::time_point end;\n')
+    fp.write('\tduration<double, std::milli> duration_sec;\n')
 
 def putStartTimer(fp):
-    fp.write("start = high_resolution_clock::now();\n")
+    fp.write("\tstart = high_resolution_clock::now();\n")
 
 def putEndTimer(fp):
-    fp.write("end = high_resolution_clock::now();\n")
-    fp.write("duration_sec = std::chrono::duration_cast<duration<double, std::milli>> (end - start);\n")
-    fp.write("printf(\"Time: %lf\\n\", duration_sec.count());\n")
+    fp.write("\tend = high_resolution_clock::now();\n")
+    fp.write("\tduration_sec = std::chrono::duration_cast<duration<double, std::milli>> (end - start);\n")
+    fp.write("\tprintf(\"Time: %lf\\n\", duration_sec.count());\n")
 
 
 totalVars = int(sys.argv[1])
