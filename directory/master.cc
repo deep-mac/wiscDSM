@@ -191,11 +191,11 @@ Status ClientImpl::getPage(ServerContext* context, const PageRequest* request, S
     if (page_sent){
         while(bytesSent < pageSize) {
             // TODO: Access 1024 Bytes of address
-            char pageChunk[writeSize];
-            memcpy(pageChunk, page+ bytesSent, writeSize);
-            reply.set_pagedata(std::string(pageChunk, writeSize));
+            //char pageChunk[writeSize];
+            //memcpy(pageChunk, page+ bytesSent, writeSize);
+            reply.set_pagedata(std::string(page + bytesSent, writeSize));
             if (DEBUG_DATA){
-                std::cout << "getPage:: Sending page data" << std::string(pageChunk, writeSize) << std::endl;
+                std::cout << "getPage:: Sending page data" << std::string(page + bytesSent, writeSize) << std::endl;
             }
             reply.set_ack(true);
             reply.set_size(writeSize);
