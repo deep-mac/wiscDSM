@@ -334,18 +334,19 @@ int main(int argc, char *argv[]){
     //printf("Woke up from sleep\n");
 
     // Custom tests go here
-    test_100_100000_0();
+    //test_100_100000_0();
     //test_100_100000_25();
     //test_100_100000_50();
     //test_100_100000_75();
     //test_100_100000_100();
-    //test_100_100000_0_stride();
+    test_100_100000_0_stride();
     //test_100_100000_25_stride();
     //test_100_100000_50_stride();
     //test_100_100000_75_stride();
     //test_100_100000_100_stride();
 
     //
+    sleep(30);
 
     printf("Number of segmentation faults : %d\n", DSMClient::numSegFaults);
     printf("Number of Page Invalidations Acked : %d\n", MasterImpl::numPageInvalidationsAcked);
