@@ -47,7 +47,6 @@ PageState* PageTable::getState(uint32_t value){
         state->st = INV;
         return state;
     }
-    printf("pageTable:: Get state value = %u\n", value);
     if ((value >> 30)  == 0x1){
         state->st = SHARED;
     }

@@ -9,7 +9,7 @@
 
 #include "directory.grpc.pb.h"
 #include"table.h"
-#define DEBUG 1
+#define DEBUG 0
 #define DEBUG_DATA 0
 #define TOTAL_LOCKS 100
 
@@ -88,6 +88,6 @@ class ClientImpl final : public Client::Service {
         ///FIXME the master to client address are not setup, not sure what is stub resizing
         std::vector<DSMMaster> clients;
         uint32_t masterID;
-        std::mutex dsmLock[TOTAL_LOCKS];
+        std::mutex dsmLock;//[TOTAL_LOCKS];
 
 };
